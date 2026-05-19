@@ -26,7 +26,7 @@ export default function BoardPage() {
     setYear(next.year);
   };
 
-  const { createTask } = useTasks(week_number, year);
+  const { tasks, isLoading: tasksLoading, createTask, updateTask, deleteTask } = useTasks(week_number, year);
 
   useEffect(() => {
     if (!isLoading && session && !household) {
@@ -72,7 +72,7 @@ export default function BoardPage() {
         </button>
       )}
 
-      <TaskList week_number={week_number} year={year} />
+      <TaskList tasks={tasks} isLoading={tasksLoading} updateTask={updateTask} deleteTask={deleteTask} />
 
       <CreateTaskInput onCreate={createTask} />
     </div>

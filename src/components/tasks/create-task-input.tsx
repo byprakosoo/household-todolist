@@ -7,14 +7,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AssigneePicker } from "./assignee-picker";
 import { CategoryPicker } from "./category-picker";
 import type { AssigneeType } from "@/types";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface CreateTaskInputProps {
   onCreate: (task: {
     title: string;
     assignee_type: AssigneeType;
     category_id: string | null;
-  }) => void;
+  }) => Promise<void>;
 }
 
 export function CreateTaskInput({ onCreate }: CreateTaskInputProps) {
@@ -22,6 +23,7 @@ export function CreateTaskInput({ onCreate }: CreateTaskInputProps) {
   const [title, setTitle] = useState("");
   const [assigneeType, setAssigneeType] = useState<AssigneeType>("both");
   const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -36,11 +38,18 @@ export function CreateTaskInput({ onCreate }: CreateTaskInputProps) {
     setCategoryId(null);
   };
 
-  const handleSubmit = () => {
-    if (!title.trim()) return;
-    onCreate({ title: title.trim(), assignee_type: assigneeType, category_id: categoryId });
-    resetForm();
-    setOpen(false);
+  const handleSubmit = async () => {
+    if (!title.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      await onCreate({ title: title.trim(), assignee_type: assigneeType, category_id: categoryId });
+      resetForm();
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create task");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -88,8 +97,8 @@ export function CreateTaskInput({ onCreate }: CreateTaskInputProps) {
               <Button variant="outline" onClick={() => handleOpenChange(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleSubmit} disabled={!title.trim()}>
-                Add Task
+              <Button onClick={handleSubmit} disabled={!title.trim() || submitting}>
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add Task"}
               </Button>
             </div>
           </div>

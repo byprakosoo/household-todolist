@@ -2,23 +2,21 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useTasks } from "@/hooks/use-tasks";
 import { useCategories } from "@/hooks/use-categories";
 import { TaskCard } from "./task-card";
 import { CategoryFilter } from "./category-filter";
 import { Loader2 } from "lucide-react";
+import type { Task } from "@/types";
 
 interface TaskListProps {
-  week_number: number;
-  year: number;
+  tasks: Task[];
+  isLoading: boolean;
+  updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
 }
 
-export function TaskList({ week_number, year }: TaskListProps) {
+export function TaskList({ tasks, isLoading, updateTask, deleteTask }: TaskListProps) {
   const { partner } = useAuth();
-  const { tasks, isLoading, updateTask, deleteTask } = useTasks(
-    week_number,
-    year
-  );
   const { categories } = useCategories();
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
 

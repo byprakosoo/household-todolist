@@ -19,16 +19,22 @@ export function useTasks(week_number: number, year: number) {
       return;
     }
     setIsLoading(true);
-    const { data } = await supabase
-      .from("tasks")
-      .select("*, category:task_categories(*), creator:users!created_by(*), assignee:users!assigned_to(*)")
-      .eq("household_id", household.id)
-      .eq("week_number", week_number)
-      .eq("year", year)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: true });
-    setTasks((data as Task[]) || []);
-    setIsLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*, category:task_categories(*), creator:users!created_by(*), assignee:users!assigned_to(*)")
+        .eq("household_id", household.id)
+        .eq("week_number", week_number)
+        .eq("year", year)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      setTasks((data as Task[]) || []);
+    } catch {
+      setTasks([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, [household, supabase, week_number, year]);
 
   useEffect(() => {
@@ -60,6 +66,7 @@ export function useTasks(week_number: number, year: number) {
     return () => {
       supabase.removeChannel(channel);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [household?.id, supabase, week_number, year]);
 
   const createTask = async (task: {
