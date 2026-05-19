@@ -10,6 +10,7 @@ export function useTasks(week_number: number, year: number) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const fetchTasksRef = useRef<() => Promise<void>>();
 
   const fetchTasks = useCallback(async () => {
     if (!household) {
@@ -34,6 +35,8 @@ export function useTasks(week_number: number, year: number) {
     fetchTasks();
   }, [fetchTasks]);
 
+  fetchTasksRef.current = fetchTasks;
+
   useEffect(() => {
     if (!household) return;
     const channel = supabase
@@ -47,7 +50,7 @@ export function useTasks(week_number: number, year: number) {
           filter: `household_id=eq.${household.id}`,
         },
         () => {
-          fetchTasks();
+          fetchTasksRef.current?.();
         }
       )
       .subscribe();
@@ -57,7 +60,7 @@ export function useTasks(week_number: number, year: number) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [household, supabase, week_number, year, fetchTasks]);
+  }, [household?.id, supabase, week_number, year]);
 
   const createTask = async (task: {
     title: string;
