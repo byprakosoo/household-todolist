@@ -256,6 +256,7 @@ returns uuid as $$
 $$ language sql stable security definer;
 
 -- users: can read own + partner's profile
+drop policy if exists "users_read_own_household" on public.users;
 create policy "users_read_own_household" on public.users
   for select using (
     id = auth.uid()
@@ -265,49 +266,60 @@ create policy "users_read_own_household" on public.users
     )
   );
 
+drop policy if exists "users_update_own" on public.users;
 create policy "users_update_own" on public.users
   for update using (id = auth.uid());
 
+drop policy if exists "users_insert_own" on public.users;
 create policy "users_insert_own" on public.users
   for insert with check (id = auth.uid());
 
 -- households: allow lookup by invite code (for joining), modify by members only
+drop policy if exists "households_select" on public.households;
 create policy "households_select" on public.households
   for select using (true);
 
+drop policy if exists "households_insert" on public.households;
 create policy "households_insert" on public.households
   for insert with check (true);
 
+drop policy if exists "households_update" on public.households;
 create policy "households_update" on public.households
   for update using (id = public.get_my_household());
 
+drop policy if exists "households_delete" on public.households;
 create policy "households_delete" on public.households
   for delete using (id = public.get_my_household());
 
 -- household_members: members only for reads, allow self-insert for joining
+drop policy if exists "hm_select" on public.household_members;
 create policy "hm_select" on public.household_members
   for select using (
     household_id = public.get_my_household()
     or user_id = auth.uid()
   );
 
+drop policy if exists "hm_insert" on public.household_members;
 create policy "hm_insert" on public.household_members
   for insert with check (
     user_id = auth.uid()
   );
 
+drop policy if exists "hm_delete" on public.household_members;
 create policy "hm_delete" on public.household_members
   for delete using (
     household_id = public.get_my_household()
   );
 
 -- task_categories: household members only
+drop policy if exists "categories_members_only" on public.task_categories;
 create policy "categories_members_only" on public.task_categories
   for all using (
     household_id = public.get_my_household()
   );
 
 -- tasks: household members only
+drop policy if exists "tasks_members_only" on public.tasks;
 create policy "tasks_members_only" on public.tasks
   for all using (
     household_id = public.get_my_household()
@@ -317,6 +329,20 @@ create policy "tasks_members_only" on public.tasks
 -- 6. REALTIME
 -- ============================================================
 
--- Enable realtime on tasks table
-alter publication supabase_realtime add table public.tasks;
-alter publication supabase_realtime add table public.task_categories;
+-- Enable realtime on tasks table (ignore if already added)
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'tasks'
+  ) then
+    alter publication supabase_realtime add table public.tasks;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'task_categories'
+  ) then
+    alter publication supabase_realtime add table public.task_categories;
+  end if;
+end;
+$$;

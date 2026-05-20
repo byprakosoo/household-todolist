@@ -3,7 +3,7 @@
 import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "react-hot-toast";
 
-export function AuthProviderWrapper({ children }: { children: React.ReactNode }) {
+export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       {children}

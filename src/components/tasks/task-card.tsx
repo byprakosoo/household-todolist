@@ -12,12 +12,13 @@ import { cn } from "@/lib/utils";
 import type { Task } from "@/types";
 import { AssigneePicker } from "./assignee-picker";
 import { CategoryPicker } from "./category-picker";
+import toast from "react-hot-toast";
 
 interface TaskCardProps {
   task: Task;
-  onToggle: (id: string, is_done: boolean) => void;
-  onUpdate: (id: string, updates: Partial<Task>) => void;
-  onDelete: (id: string) => void;
+  onToggle: (id: string, is_done: boolean) => Promise<void> | void;
+  onUpdate: (id: string, updates: Partial<Task>) => Promise<void> | void;
+  onDelete: (id: string) => Promise<void> | void;
   partnerName: string;
   isDragging?: boolean;
   dragHandleProps?: Record<string, unknown>;
@@ -50,6 +51,22 @@ export function TaskCard({
   };
 
   const al = assigneeLabel();
+
+  const handleToggle = async (checked: boolean) => {
+    try {
+      await onToggle(task.id, checked);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update task");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await onDelete(task.id);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete task");
+    }
+  };
 
   const handleSave = () => {
     if (!editTitle.trim()) return;
@@ -93,7 +110,7 @@ export function TaskCard({
 
         <Checkbox
           checked={task.is_done}
-          onCheckedChange={(checked) => onToggle(task.id, !!checked)}
+          onCheckedChange={handleToggle}
           className="mt-1"
         />
 
@@ -150,7 +167,7 @@ export function TaskCard({
           variant="ghost"
           size="icon"
           className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-          onClick={() => onDelete(task.id)}
+          onClick={handleDelete}
         >
           <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
         </Button>

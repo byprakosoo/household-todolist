@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { TaskList } from "@/components/tasks/task-list";
 import { CreateTaskInput } from "@/components/tasks/create-task-input";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { useTasks } from "@/hooks/use-tasks";
 import { useRouter } from "next/navigation";
 
 export default function BoardPage() {
-  const { household, isLoading, session } = useAuth();
+  const { household } = useAuth();
   const router = useRouter();
   const current = getCurrentWeek();
   const [week_number, setWeekNumber] = useState(current.week_number);
@@ -27,14 +27,6 @@ export default function BoardPage() {
   };
 
   const { tasks, isLoading: tasksLoading, createTask, updateTask, deleteTask } = useTasks(week_number, year);
-
-  useEffect(() => {
-    if (!isLoading && session && !household) {
-      router.push("/onboarding");
-    }
-  }, [isLoading, session, household, router]);
-
-  if (!isLoading && session && !household) return null;
 
   return (
     <div className="space-y-6">
@@ -60,7 +52,7 @@ export default function BoardPage() {
         </Button>
       </div>
 
-      {!household?.rollover_confirmed && isCurrentWeek && household && (
+      {household && !household.rollover_confirmed && isCurrentWeek && (
         <button
           onClick={() => router.push("/rollover")}
           className="w-full flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-amber-600 dark:text-amber-400 text-sm hover:bg-amber-500/10 transition-colors"

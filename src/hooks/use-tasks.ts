@@ -2,11 +2,36 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import type { Task } from "@/types";
+import type { Task, User } from "@/types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
+const MY_USER_ID = "20000000-0000-0000-0000-000000000001";
+const PARTNER_ID = "20000000-0000-0000-0000-000000000002";
+
+const ME_USER: User = {
+  id: MY_USER_ID,
+  email: "me@weeksync.local",
+  display_name: "Me",
+  avatar_color: "#3B82F6",
+  created_at: new Date().toISOString(),
+};
+
+const PARTNER_USER: User = {
+  id: PARTNER_ID,
+  email: "partner@weeksync.local",
+  display_name: "Partner",
+  avatar_color: "#EC4899",
+  created_at: new Date().toISOString(),
+};
+
+function resolveUser(id: string | null): User | null {
+  if (id === MY_USER_ID) return ME_USER;
+  if (id === PARTNER_ID) return PARTNER_USER;
+  return null;
+}
+
 export function useTasks(week_number: number, year: number) {
-  const { household, supabase } = useAuth();
+  const { household, user, supabase } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -22,14 +47,21 @@ export function useTasks(week_number: number, year: number) {
     try {
       const { data, error } = await supabase
         .from("tasks")
-        .select("*, category:task_categories(*), creator:users!created_by(*), assignee:users!assigned_to(*)")
+        .select("*, category:task_categories(*)")
         .eq("household_id", household.id)
         .eq("week_number", week_number)
         .eq("year", year)
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true });
       if (error) throw error;
-      setTasks((data as Task[]) || []);
+
+      const mapped = ((data as Array<Record<string, unknown>>) || []).map((row) => ({
+        ...row,
+        creator: resolveUser(row.created_by as string | null),
+        assignee: resolveUser(row.assigned_to as string | null),
+      })) as Task[];
+
+      setTasks(mapped);
     } catch {
       setTasks([]);
     } finally {
@@ -75,8 +107,8 @@ export function useTasks(week_number: number, year: number) {
     category_id?: string | null;
     notes?: string | null;
   }) => {
-    if (!household || !supabase) return;
-    const { data: authUser } = await supabase.auth.getUser();
+    if (!household) throw new Error("Household not loaded. Please wait a moment and try again.");
+    if (!user) throw new Error("User not available.");
     const { data: tasksList } = await supabase
       .from("tasks")
       .select("sort_order")
@@ -88,10 +120,17 @@ export function useTasks(week_number: number, year: number) {
 
     const newOrder = (tasksList?.[0]?.sort_order ?? -1) + 1;
 
+    const assignedTo =
+      task.assignee_type === "me"
+        ? user.id
+        : task.assignee_type === "partner"
+        ? PARTNER_ID
+        : null;
+
     const { error } = await supabase.from("tasks").insert({
       household_id: household.id,
-      created_by: authUser.user?.id,
-      assigned_to: task.assignee_type === "both" ? null : task.assignee_type === "me" ? authUser.user?.id : null,
+      created_by: user.id,
+      assigned_to: assignedTo,
       title: task.title,
       assignee_type: task.assignee_type,
       category_id: task.category_id || null,
