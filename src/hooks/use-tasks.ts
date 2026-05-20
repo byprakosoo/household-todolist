@@ -53,7 +53,7 @@ export function useTasks(week_number: number, year: number) {
           event: "*",
           schema: "public",
           table: "tasks",
-          filter: `household_id=eq.${household.id}`,
+          filter: `household_id=eq.${household.id} and week_number=eq.${week_number} and year=eq.${year}`,
         },
         () => {
           fetchTasksRef.current?.();
@@ -103,6 +103,7 @@ export function useTasks(week_number: number, year: number) {
     });
 
     if (error) throw error;
+    await fetchTasksRef.current?.();
   };
 
   const updateTask = async (id: string, updates: Partial<Task>) => {

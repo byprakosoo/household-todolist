@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import type { Task } from "@/types";
 import toast from "react-hot-toast";
+import { getISOWeek, getISOWeekYear, addWeeks, startOfISOWeek } from "date-fns";
 
 export default function RolloverPage() {
   const { household, supabase } = useAuth();
@@ -23,10 +24,10 @@ export default function RolloverPage() {
     if (!household) return;
     const fetchPending = async () => {
       const now = new Date();
-      const weekStart = new Date(now.getFullYear(), 0, 1 + (getISOWeek(now) - 1) * 7);
-      const prevWeek = new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const prevWeekNum = getISOWeek(prevWeek);
-      const prevYear = prevWeek.getFullYear();
+      const currentWeekStart = startOfISOWeek(now);
+      const prevWeekStart = addWeeks(currentWeekStart, -1);
+      const prevWeekNum = getISOWeek(prevWeekStart);
+      const prevYear = getISOWeekYear(prevWeekStart);
 
       const { data } = await supabase
         .from("tasks")
@@ -60,7 +61,7 @@ export default function RolloverPage() {
 
     const now = new Date();
     const currentWeek = getISOWeek(now);
-    const currentYear = now.getFullYear();
+    const currentYear = getISOWeekYear(now);
     const tasksToRoll = tasks.filter((t) => selectedIds.has(t.id));
 
     const inserts = tasksToRoll.map((t, i) => ({
@@ -78,9 +79,24 @@ export default function RolloverPage() {
       rolled_over_from: t.id,
     }));
 
-    const { error } = await supabase.from("tasks").insert(inserts);
-    if (error) {
+    const { error: insertError } = await supabase.from("tasks").insert(inserts);
+    if (insertError) {
       toast.error("Failed to roll over tasks. Please try again.");
+      setIsConfirming(false);
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from("households")
+      .update({
+        rollover_confirmed: true,
+        confirmed_week: currentWeek,
+        confirmed_year: currentYear,
+      })
+      .eq("id", household.id);
+
+    if (updateError) {
+      toast.error("Rollover confirmed but failed to update status.");
       setIsConfirming(false);
       return;
     }
@@ -92,13 +108,6 @@ export default function RolloverPage() {
     setTimeout(() => {
       router.push("/board");
     }, 2000);
-  };
-
-  const getISOWeek = (d: Date) => {
-    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    return Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
   };
 
   if (isLoading) {
