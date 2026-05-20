@@ -148,11 +148,13 @@ export function useTasks(week_number: number, year: number) {
   const updateTask = async (id: string, updates: Partial<Task>) => {
     const { error } = await supabase.from("tasks").update(updates).eq("id", id);
     if (error) throw error;
+    await fetchTasksRef.current?.();
   };
 
   const deleteTask = async (id: string) => {
     const { error } = await supabase.from("tasks").delete().eq("id", id);
     if (error) throw error;
+    await fetchTasksRef.current?.();
   };
 
   const reorderTasks = async (orderedIds: string[]) => {
@@ -164,6 +166,7 @@ export function useTasks(week_number: number, year: number) {
       .from("tasks")
       .upsert(updates as Task[]);
     if (error) throw error;
+    await fetchTasksRef.current?.();
   };
 
   return { tasks, isLoading, createTask, updateTask, deleteTask, reorderTasks, refetch: fetchTasks };

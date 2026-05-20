@@ -68,24 +68,24 @@ export function CreateTaskInput({ onCreate }: CreateTaskInputProps) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
+        className="fixed bottom-24 right-6 z-40 h-14 w-14 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
       >
-        <Plus className="h-7 w-7" />
+        <Plus className="h-7 w-7" strokeWidth={2.5} />
       </button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>New Task</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 pt-2">
+          <div className="space-y-5 pt-2">
             <Input
               ref={inputRef}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="What needs to be done?"
-              className="text-base font-medium"
+              className="text-base font-medium h-11 rounded-lg"
               autoFocus
             />
 
@@ -93,12 +93,13 @@ export function CreateTaskInput({ onCreate }: CreateTaskInputProps) {
 
             <CategoryPicker value={categoryId} onChange={setCategoryId} />
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => handleOpenChange(false)}>
+            <div className="flex justify-end gap-3 pt-1">
+              <Button variant="outline" onClick={() => handleOpenChange(false)} className="rounded-lg">
                 Cancel
               </Button>
-              <Button onClick={handleSubmit} disabled={!title.trim() || submitting}>
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add Task"}
+              <Button onClick={handleSubmit} disabled={!title.trim() || submitting} className="rounded-lg">
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                Add Task
               </Button>
             </div>
           </div>

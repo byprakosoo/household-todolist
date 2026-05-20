@@ -23,17 +23,17 @@ export function AssigneePicker({ value, onChange }: AssigneePickerProps) {
           key={opt.value}
           onClick={() => onChange(opt.value)}
           className={cn(
-            "flex-1 rounded-lg border px-3 py-2.5 text-left transition-all",
+            "flex-1 rounded-lg border px-4 py-3 text-left transition-all",
             value === opt.value
-              ? "border-primary bg-primary/5 ring-1 ring-primary"
-              : "border-border hover:bg-accent",
+              ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+              : "border-border hover:bg-accent hover:border-accent-foreground/20",
           )}
         >
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">{opt.label}</span>
-            {value === opt.value && <Check className="h-4 w-4 text-primary" />}
+            {value === opt.value && <Check className="h-4 w-4 text-primary" strokeWidth={2.5} />}
           </div>
-          <span className="text-[10px] text-muted-foreground">{opt.sub}</span>
+          <span className="text-[11px] text-muted-foreground mt-0.5 block">{opt.sub}</span>
         </button>
       ))}
     </div>

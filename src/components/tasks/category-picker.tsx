@@ -51,35 +51,37 @@ export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger>
-        <Button
-          variant="outline"
-          className="w-full justify-start h-auto py-2 px-3 font-normal"
-        >
-          {selected ? (
-            <div className="flex items-center gap-2">
-              <span
-                className="w-3 h-3 rounded-full shrink-0"
-                style={{ backgroundColor: selected.color_hex }}
-              />
-              {selected.emoji && <span className="text-sm">{selected.emoji}</span>}
-              <span className="text-sm">{selected.name}</span>
-              <X
-                className="h-3.5 w-3.5 ml-auto text-muted-foreground hover:text-foreground"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChange(null);
-                }}
-              />
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <Folder className="h-4 w-4" />
-              No category
-            </div>
-          )}
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="outline"
+            className="w-full justify-start h-auto py-2 px-3 font-normal"
+          >
+            {selected ? (
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-3 h-3 rounded-full shrink-0"
+                  style={{ backgroundColor: selected.color_hex }}
+                />
+                {selected.emoji && <span className="text-sm">{selected.emoji}</span>}
+                <span className="text-sm">{selected.name}</span>
+                <X
+                  className="h-3.5 w-3.5 ml-auto text-muted-foreground hover:text-foreground"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onChange(null);
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <Folder className="h-4 w-4" />
+                No category
+              </div>
+            )}
+          </Button>
+        }
+      />
       <PopoverContent className="w-64 p-0" align="start">
         <div className="p-2 max-h-48 overflow-y-auto space-y-0.5">
           <button

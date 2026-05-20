@@ -84,13 +84,13 @@ export default function CategoriesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold">Categories</h1>
+          <h1 className="text-xl font-bold tracking-tight">Categories</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {categories.length}/{MAX_CATEGORIES} used
           </p>
         </div>
-        <Button size="sm" onClick={handleOpenCreate} disabled={categories.length >= MAX_CATEGORIES}>
-          <Plus className="h-4 w-4 mr-1" /> New
+        <Button size="sm" onClick={handleOpenCreate} disabled={categories.length >= MAX_CATEGORIES} className="rounded-lg">
+          <Plus className="h-4 w-4 mr-1.5" /> New
         </Button>
       </div>
 
@@ -98,7 +98,7 @@ export default function CategoriesPage() {
         {categories.map((cat) => (
           <div
             key={cat.id}
-            className="flex items-center gap-3 rounded-lg border p-3 hover:bg-accent/50 transition-colors group"
+            className="flex items-center gap-3.5 rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-all group"
           >
             <span
               className="w-6 h-6 rounded-full shrink-0 border-2 border-white shadow-sm"

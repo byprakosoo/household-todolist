@@ -28,7 +28,7 @@
     --chart-3: 43 96% 56%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --radius: 0.75rem;
+    --radius: 0.875rem;
     --sidebar-background: 210 40% 96%;
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 160 84% 39%;
@@ -42,7 +42,7 @@
   .dark {
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
+    --card: 222 47% 13%;
     --card-foreground: 210 40% 98%;
     --popover: 222 47% 13%;
     --popover-foreground: 210 40% 98%;
@@ -80,7 +80,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
 }
 

@@ -133,6 +133,19 @@ export default function RolloverPage() {
   }
 
   if (tasks.length === 0) {
+    const handleDismiss = async () => {
+      const now = new Date();
+      await supabase
+        .from("households")
+        .update({
+          rollover_confirmed: true,
+          confirmed_week: getISOWeek(now),
+          confirmed_year: getISOWeekYear(now),
+        })
+        .eq("id", household!.id);
+      router.push("/board");
+    };
+
     return (
       <Card className="max-w-md mx-auto">
         <CardHeader>
@@ -142,7 +155,7 @@ export default function RolloverPage() {
           <p className="text-muted-foreground text-sm">
             All tasks from last week are complete. Nothing to roll over.
           </p>
-          <Button className="w-full" onClick={() => router.push("/board")}>
+          <Button className="w-full" onClick={handleDismiss}>
             Go to Board
           </Button>
         </CardContent>
