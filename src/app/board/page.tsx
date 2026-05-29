@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { TaskList } from "@/components/tasks/task-list";
 import { CreateTaskInput } from "@/components/tasks/create-task-input";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { getCurrentWeek, getAdjacentWeek, formatWeekRange } from "@/lib/constant
 import { ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTasks } from "@/hooks/use-tasks";
+import { useCategories } from "@/hooks/use-categories";
 import { useRouter } from "next/navigation";
 import { getISOWeek, getISOWeekYear, startOfISOWeek, addWeeks } from "date-fns";
 
@@ -22,13 +23,14 @@ export default function BoardPage() {
   const isCurrentWeek =
     week_number === current.week_number && year === current.year;
 
-  const navigate = (direction: -1 | 1) => {
+  const navigate = useCallback((direction: -1 | 1) => {
     const next = getAdjacentWeek(week_number, year, direction);
     setWeekNumber(next.week_number);
     setYear(next.year);
-  };
+  }, [week_number, year]);
 
   const { tasks, isLoading: tasksLoading, createTask, updateTask, deleteTask } = useTasks(week_number, year);
+  const { categories, createCategory } = useCategories();
 
   useEffect(() => {
     if (!household) return;
@@ -101,9 +103,16 @@ export default function BoardPage() {
         </button>
       )}
 
-      <TaskList tasks={tasks} isLoading={tasksLoading} updateTask={updateTask} deleteTask={deleteTask} />
+      <TaskList
+        tasks={tasks}
+        isLoading={tasksLoading}
+        updateTask={updateTask}
+        deleteTask={deleteTask}
+        categories={categories}
+        createCategory={createCategory}
+      />
 
-      <CreateTaskInput onCreate={createTask} />
+      <CreateTaskInput onCreate={createTask} categories={categories} createCategory={createCategory} />
     </div>
   );
 }

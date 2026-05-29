@@ -9,6 +9,7 @@ import { CategoryPicker } from "./category-picker";
 import type { AssigneeType } from "@/types";
 import { Plus, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import type { TaskCategory } from "@/types";
 
 interface CreateTaskInputProps {
   onCreate: (task: {
@@ -16,9 +17,11 @@ interface CreateTaskInputProps {
     assignee_type: AssigneeType;
     category_id: string | null;
   }) => Promise<void>;
+  categories: TaskCategory[];
+  createCategory: (cat: { name: string; color_hex: string; emoji: string | null }) => Promise<void>;
 }
 
-export function CreateTaskInput({ onCreate }: CreateTaskInputProps) {
+export function CreateTaskInput({ onCreate, categories, createCategory }: CreateTaskInputProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [assigneeType, setAssigneeType] = useState<AssigneeType>("both");
@@ -91,7 +94,12 @@ export function CreateTaskInput({ onCreate }: CreateTaskInputProps) {
 
             <AssigneePicker value={assigneeType} onChange={setAssigneeType} />
 
-            <CategoryPicker value={categoryId} onChange={setCategoryId} />
+            <CategoryPicker
+              value={categoryId}
+              onChange={setCategoryId}
+              categories={categories}
+              createCategory={createCategory}
+            />
 
             <div className="flex justify-end gap-3 pt-1">
               <Button variant="outline" onClick={() => handleOpenChange(false)} className="rounded-lg">

@@ -5,8 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 
 const HOUSEHOLD_ID = "10000000-0000-0000-0000-000000000001";
-const MY_USER_ID = "20000000-0000-0000-0000-000000000001";
-const PARTNER_USER_ID = "20000000-0000-0000-0000-000000000002";
+const USER_1_ID = "20000000-0000-0000-0000-000000000001";
+const USER_2_ID = "20000000-0000-0000-0000-000000000002";
 
 interface AppUser {
   id: string;
@@ -33,17 +33,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const DEFAULT_USER: AppUser = {
-  id: MY_USER_ID,
-  email: "me@weeksync.local",
-  display_name: "Me",
+const HUSBAND_USER: AppUser = {
+  id: USER_1_ID,
+  email: "husband@household.local",
+  display_name: "Husband",
   avatar_color: "#3B82F6",
 };
 
-const DEFAULT_PARTNER: AppUser = {
-  id: PARTNER_USER_ID,
-  email: "partner@weeksync.local",
-  display_name: "Partner",
+const WIFE_USER: AppUser = {
+  id: USER_2_ID,
+  email: "wife@household.local",
+  display_name: "Wife",
   avatar_color: "#EC4899",
 };
 
@@ -108,9 +108,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         session: null,
-        user: DEFAULT_USER,
+        user: HUSBAND_USER,
         household,
-        partner: DEFAULT_PARTNER,
+        partner: WIFE_USER,
         isLoading,
         supabase,
         refreshHousehold,

@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { GripVertical, MessageSquare, Trash2, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import type { Task } from "@/types";
+import type { Task, TaskCategory } from "@/types";
 import { AssigneePicker } from "./assignee-picker";
 import { CategoryPicker } from "./category-picker";
 import toast from "react-hot-toast";
@@ -19,16 +20,20 @@ interface TaskCardProps {
   onUpdate: (id: string, updates: Partial<Task>) => Promise<void> | void;
   onDelete: (id: string) => Promise<void> | void;
   partnerName: string;
+  categories: TaskCategory[];
+  createCategory: (cat: { name: string; color_hex: string; emoji: string | null }) => Promise<void>;
   isDragging?: boolean;
   dragHandleProps?: Record<string, unknown>;
 }
 
-export function TaskCard({
+function TaskCardComponent({
   task,
   onToggle,
   onUpdate,
   onDelete,
   partnerName,
+  categories,
+  createCategory,
   isDragging,
   dragHandleProps,
 }: TaskCardProps) {
@@ -38,36 +43,42 @@ export function TaskCard({
   const [editAssignee, setEditAssignee] = useState(task.assignee_type);
   const [editCategoryId, setEditCategoryId] = useState<string | null>(task.category_id || null);
 
-  const assigneeLabel = () => {
+  const assigneeLabel = useMemo(() => {
     switch (task.assignee_type) {
       case "me":
-        return { text: "Me", color: "bg-primary/10 text-primary ring-1 ring-primary/20" };
+        return { text: "Husband", color: "bg-primary/10 text-primary ring-1 ring-primary/20" };
       case "partner":
-        return { text: partnerName || "Partner", color: "bg-secondary text-secondary-foreground ring-1 ring-border" };
+        return { text: partnerName || "Wife", color: "bg-secondary text-secondary-foreground ring-1 ring-border" };
       case "both":
         return { text: "Us", color: "bg-accent text-accent-foreground ring-1 ring-accent-foreground/10" };
     }
-  };
+  }, [partnerName, task.assignee_type]);
 
-  const al = assigneeLabel();
+  const startEditing = useCallback(() => {
+    setEditTitle(task.title);
+    setEditNotes(task.notes || "");
+    setEditAssignee(task.assignee_type);
+    setEditCategoryId(task.category_id || null);
+    setIsEditing(true);
+  }, [task.assignee_type, task.category_id, task.notes, task.title]);
 
-  const handleToggle = async (checked: boolean) => {
+  const handleToggle = useCallback(async (checked: boolean) => {
     try {
       await onToggle(task.id, checked);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update task");
     }
-  };
+  }, [onToggle, task.id]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     try {
       await onDelete(task.id);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete task");
     }
-  };
+  }, [onDelete, task.id]);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (!editTitle.trim()) return;
     onUpdate(task.id, {
       title: editTitle.trim(),
@@ -76,9 +87,9 @@ export function TaskCard({
       category_id: editCategoryId,
     });
     setIsEditing(false);
-  };
+  }, [editAssignee, editCategoryId, editNotes, editTitle, onUpdate, task.id]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSave();
@@ -87,7 +98,7 @@ export function TaskCard({
       setIsEditing(false);
       setEditTitle(task.title);
     }
-  };
+  }, [handleSave, task.title]);
 
   return (
     <>
@@ -107,11 +118,12 @@ export function TaskCard({
           </button>
         )}
 
-        <input
-          type="checkbox"
+        <Checkbox
           checked={task.is_done}
-          onChange={(e) => handleToggle(e.target.checked)}
-          className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded-md border-2 border-muted-foreground/30 accent-primary checked:accent-primary transition-colors"
+          onCheckedChange={(checked) => handleToggle(Boolean(checked))}
+          onClick={(e) => e.stopPropagation()}
+          aria-label={task.is_done ? `Mark ${task.title} incomplete` : `Mark ${task.title} complete`}
+          className="mt-0.5 cursor-pointer"
         />
 
         <div className="flex-1 min-w-0">
@@ -120,25 +132,19 @@ export function TaskCard({
               "block text-[15px] font-medium cursor-pointer hover:text-primary transition-colors leading-snug",
               task.is_done && "line-through text-muted-foreground/70"
             )}
-            onClick={() => {
-              setEditTitle(task.title);
-              setEditNotes(task.notes || "");
-              setEditAssignee(task.assignee_type);
-              setEditCategoryId(task.category_id || null);
-              setIsEditing(true);
-            }}
+            onClick={startEditing}
           >
             {task.title}
           </span>
 
           <div className="flex items-center gap-2 mt-2 flex-wrap">
-            <Badge variant="secondary" className={cn("text-[11px] px-2 py-0.5 h-5.5 gap-1 font-normal rounded-md shadow-none", al.color)}>
+            <Badge variant="secondary" className={cn("text-[11px] px-2 py-0.5 h-5.5 gap-1 font-normal rounded-md shadow-none", assigneeLabel.color)}>
               {task.assignee_type === "both" ? (
                 <Users className="h-3 w-3" />
               ) : (
                 <User className="h-3 w-3" />
               )}
-              {al.text}
+              {assigneeLabel.text}
             </Badge>
 
             {task.category && (
@@ -186,7 +192,12 @@ export function TaskCard({
 
             <AssigneePicker value={editAssignee} onChange={setEditAssignee} />
 
-            <CategoryPicker value={editCategoryId} onChange={setEditCategoryId} />
+            <CategoryPicker
+              value={editCategoryId}
+              onChange={setEditCategoryId}
+              categories={categories}
+              createCategory={createCategory}
+            />
 
             <div className="space-y-1.5">
               <span className="text-xs text-muted-foreground font-medium">Notes (optional)</span>
@@ -216,3 +227,5 @@ export function TaskCard({
     </>
   );
 }
+
+export const TaskCard = memo(TaskCardComponent);

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useCategories } from "@/hooks/use-categories";
 import { CATEGORY_COLORS } from "@/types";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -11,14 +10,16 @@ import { cn } from "@/lib/utils";
 import { Plus, X, Folder } from "lucide-react";
 import { MAX_CATEGORIES } from "@/lib/constants";
 import toast from "react-hot-toast";
+import type { TaskCategory } from "@/types";
 
 interface CategoryPickerProps {
   value: string | null;
   onChange: (categoryId: string | null) => void;
+  categories: TaskCategory[];
+  createCategory: (cat: { name: string; color_hex: string; emoji: string | null }) => Promise<void>;
 }
 
-export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
-  const { categories, createCategory } = useCategories();
+export function CategoryPicker({ value, onChange, categories, createCategory }: CategoryPickerProps) {
   const [open, setOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newEmoji, setNewEmoji] = useState("");

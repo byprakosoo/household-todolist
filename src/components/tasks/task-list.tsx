@@ -2,22 +2,22 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useCategories } from "@/hooks/use-categories";
 import { TaskCard } from "./task-card";
 import { CategoryFilter } from "./category-filter";
 import { Loader2, ClipboardList } from "lucide-react";
-import type { Task } from "@/types";
+import type { Task, TaskCategory } from "@/types";
 
 interface TaskListProps {
   tasks: Task[];
   isLoading: boolean;
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
+  categories: TaskCategory[];
+  createCategory: (cat: { name: string; color_hex: string; emoji: string | null }) => Promise<void>;
 }
 
-export function TaskList({ tasks, isLoading, updateTask, deleteTask }: TaskListProps) {
+export function TaskList({ tasks, isLoading, updateTask, deleteTask, categories, createCategory }: TaskListProps) {
   const { partner } = useAuth();
-  const { categories } = useCategories();
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
   const filteredTasks = useMemo(() => {
@@ -41,9 +41,9 @@ export function TaskList({ tasks, isLoading, updateTask, deleteTask }: TaskListP
     [updateTask]
   );
 
-  const completed = tasks.filter((t) => t.is_done);
+  const completedCount = useMemo(() => tasks.reduce((count, task) => count + (task.is_done ? 1 : 0), 0), [tasks]);
 
-  if (isLoading) {
+  if (isLoading && tasks.length === 0) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -59,16 +59,22 @@ export function TaskList({ tasks, isLoading, updateTask, deleteTask }: TaskListP
         onToggle={toggleFilter}
       />
 
+      {isLoading && (
+        <div className="flex items-center justify-center py-2 text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+        </div>
+      )}
+
       {tasks.length > 0 && (
         <div className="flex items-center gap-2 px-1">
           <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
             <div
               className="h-full bg-primary rounded-full transition-all duration-500"
-              style={{ width: `${Math.round((completed.length / tasks.length) * 100)}%` }}
+              style={{ width: `${Math.round((completedCount / tasks.length) * 100)}%` }}
             />
           </div>
           <span className="text-xs text-muted-foreground font-medium tabular-nums">
-            {completed.length}/{tasks.length}
+            {completedCount}/{tasks.length}
           </span>
         </div>
       )}
@@ -81,7 +87,9 @@ export function TaskList({ tasks, isLoading, updateTask, deleteTask }: TaskListP
             onToggle={handleToggle}
             onUpdate={updateTask}
             onDelete={deleteTask}
-            partnerName={partner?.display_name || "Partner"}
+            partnerName={partner?.display_name || "Wife"}
+            categories={categories}
+            createCategory={createCategory}
           />
         ))}
       </div>

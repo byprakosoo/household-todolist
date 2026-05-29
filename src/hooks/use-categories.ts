@@ -5,14 +5,15 @@ import { useAuth } from "@/hooks/use-auth";
 import type { TaskCategory } from "@/types";
 
 export function useCategories() {
-  const { household, supabase } = useAuth();
+  const { household, supabase, isLoading: isAuthLoading } = useAuth();
   const [categories, setCategories] = useState<TaskCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchCategories = useCallback(async () => {
     if (!household) {
+      setIsLoading(isAuthLoading);
+      if (isAuthLoading) return;
       setCategories([]);
-      setIsLoading(false);
       return;
     }
     const { data } = await supabase
@@ -24,13 +25,13 @@ export function useCategories() {
       .order("name", { ascending: true });
     setCategories((data as TaskCategory[]) || []);
     setIsLoading(false);
-  }, [household, supabase]);
+  }, [household, isAuthLoading, supabase]);
 
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
 
-  const createCategory = async (cat: { name: string; color_hex: string; emoji: string | null }) => {
+  const createCategory = useCallback(async (cat: { name: string; color_hex: string; emoji: string | null }) => {
     if (!household) return;
     const { error } = await supabase.from("task_categories").insert({
       household_id: household.id,
@@ -41,19 +42,19 @@ export function useCategories() {
     });
     if (error) throw error;
     await fetchCategories();
-  };
+  }, [categories.length, fetchCategories, household, supabase]);
 
-  const updateCategory = async (id: string, updates: Partial<TaskCategory>) => {
+  const updateCategory = useCallback(async (id: string, updates: Partial<TaskCategory>) => {
     const { error } = await supabase.from("task_categories").update(updates).eq("id", id);
     if (error) throw error;
     await fetchCategories();
-  };
+  }, [fetchCategories, supabase]);
 
-  const deleteCategory = async (id: string) => {
+  const deleteCategory = useCallback(async (id: string) => {
     const { error } = await supabase.from("task_categories").update({ deleted_at: new Date().toISOString() }).eq("id", id);
     if (error) throw error;
     await fetchCategories();
-  };
+  }, [fetchCategories, supabase]);
 
   return { categories, isLoading, createCategory, updateCategory, deleteCategory, refetch: fetchCategories };
 }

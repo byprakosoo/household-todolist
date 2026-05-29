@@ -5,8 +5,8 @@ import type { AssigneeType } from "@/types";
 import { Check } from "lucide-react";
 
 const OPTIONS: { value: AssigneeType; label: string; sub: string }[] = [
-  { value: "me", label: "Me", sub: "I'll do this" },
-  { value: "partner", label: "Partner", sub: "Assign to partner" },
+  { value: "me", label: "Husband", sub: "I'll do this" },
+  { value: "partner", label: "Wife", sub: "Assign to wife" },
   { value: "both", label: "Us", sub: "We'll do this together" },
 ];
 

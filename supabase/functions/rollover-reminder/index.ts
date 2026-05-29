@@ -1,5 +1,5 @@
 // ============================================================
-// WeekSync: Rollover Reminder Edge Function
+// Household To Do List: Rollover Reminder Edge Function
 // Deploy via: supabase functions deploy rollover-reminder
 // Env vars: RESEND_API_KEY
 // ============================================================
@@ -88,14 +88,14 @@ Deno.serve(async (_req: Request) => {
         .map((t) => `• ${t.title} (${t.assignee_type})`)
         .join("\n");
 
-      const subject = `WeekSync: You have ${householdTasks.length} unfinished task${householdTasks.length > 1 ? "s" : ""} — Roll over?`;
+      const subject = `Household To Do List: You have ${householdTasks.length} unfinished task${householdTasks.length > 1 ? "s" : ""} — Roll over?`;
       const html = `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
           <h2>Weekly Rollover Reminder</h2>
           <p>You have <strong>${householdTasks.length}</strong> unfinished task${householdTasks.length > 1 ? "s" : ""} this week:</p>
           <ul>${householdTasks.map((t) => `<li>${t.title} — <em>${t.assignee_type}</em></li>`).join("")}</ul>
           <p><a href="${Deno.env.get("APP_URL")}/rollover?household=${householdId}" style="display: inline-block; background: #18181b; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">Review &amp; Roll Over</a></p>
-          <p style="color: #888; font-size: 12px;">WeekSync — Shared weekly tasks for you and your partner</p>
+          <p style="color: #888; font-size: 12px;">Household To Do List — Shared weekly tasks for you and your partner</p>
         </div>
       `;
 
@@ -122,7 +122,7 @@ async function sendEmail(to: string, subject: string, html: string) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "WeekSync <onboarding@resend.dev>",
+      from: "Household To Do List <onboarding@resend.dev>",
       to,
       subject,
       html,

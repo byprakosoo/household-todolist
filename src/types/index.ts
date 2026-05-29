@@ -57,6 +57,20 @@ export interface Task {
   assignee?: User | null;
 }
 
+export interface BuyingItem {
+  id: string;
+  household_id: string;
+  created_by: string | null;
+  name: string;
+  quantity: string | null;
+  is_bought: boolean;
+  bought_at: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  creator?: User | null;
+}
+
 export interface MonthlySummary {
   week_number: number;
   year: number;

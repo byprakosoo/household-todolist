@@ -182,6 +182,8 @@ export default function RolloverPage() {
             <Checkbox
               checked={selectedIds.has(task.id)}
               onCheckedChange={() => toggleSelection(task.id)}
+              onClick={(e) => e.stopPropagation()}
+              aria-label={selectedIds.has(task.id) ? `Do not roll over ${task.title}` : `Roll over ${task.title}`}
               className="mt-0.5"
             />
             <div className="flex-1 min-w-0">
