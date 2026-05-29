@@ -12,8 +12,8 @@ export interface Household {
   id: string;
   invite_code: string;
   rollover_confirmed: boolean;
-  confirmed_week: number;
-  confirmed_year: number;
+  confirmed_week: number | null;
+  confirmed_year: number | null;
   created_at: string;
 }
 

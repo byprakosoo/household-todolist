@@ -19,6 +19,8 @@ interface AppHousehold {
   id: string;
   invite_code: string;
   rollover_confirmed: boolean;
+  confirmed_week: number | null;
+  confirmed_year: number | null;
 }
 
 interface AuthContextType {
@@ -64,6 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: hh.id,
         invite_code: hh.invite_code,
         rollover_confirmed: hh.rollover_confirmed,
+        confirmed_week: hh.confirmed_week,
+        confirmed_year: hh.confirmed_year,
       });
       setIsLoading(false);
       return;
@@ -91,6 +95,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: created.id,
         invite_code: created.invite_code,
         rollover_confirmed: created.rollover_confirmed,
+        confirmed_week: created.confirmed_week,
+        confirmed_year: created.confirmed_year,
       });
     }
     setIsLoading(false);

@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 import { getISOWeek, getISOWeekYear, addWeeks, startOfISOWeek } from "date-fns";
 
 export default function RolloverPage() {
-  const { household, supabase } = useAuth();
+  const { household, supabase, refreshHousehold } = useAuth();
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -62,47 +62,27 @@ export default function RolloverPage() {
     const now = new Date();
     const currentWeek = getISOWeek(now);
     const currentYear = getISOWeekYear(now);
-    const tasksToRoll = tasks.filter((t) => selectedIds.has(t.id));
+    const response = await fetch("/api/rollover/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        taskIds: Array.from(selectedIds),
+        targetWeek: currentWeek,
+        targetYear: currentYear,
+        householdId: household.id,
+      }),
+    });
+    const result = await response.json();
 
-    const inserts = tasksToRoll.map((t, i) => ({
-      household_id: household.id,
-      created_by: t.created_by,
-      assigned_to: t.assigned_to,
-      category_id: t.category_id,
-      title: t.title,
-      notes: t.notes,
-      assignee_type: t.assignee_type,
-      is_done: false,
-      week_number: currentWeek,
-      year: currentYear,
-      sort_order: i,
-      rolled_over_from: t.id,
-    }));
-
-    const { error: insertError } = await supabase.from("tasks").insert(inserts);
-    if (insertError) {
+    if (!response.ok) {
       toast.error("Failed to roll over tasks. Please try again.");
       setIsConfirming(false);
       return;
     }
 
-    const { error: updateError } = await supabase
-      .from("households")
-      .update({
-        rollover_confirmed: true,
-        confirmed_week: currentWeek,
-        confirmed_year: currentYear,
-      })
-      .eq("id", household.id);
-
-    if (updateError) {
-      toast.error("Rollover confirmed but failed to update status.");
-      setIsConfirming(false);
-      return;
-    }
-
+    await refreshHousehold();
     setConfirmed(true);
-    toast.success(`${inserts.length} tasks rolled over to next week`);
+    toast.success(`${result.count ?? 0} tasks rolled over to this week`);
     setIsConfirming(false);
 
     setTimeout(() => {
